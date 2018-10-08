@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"os"
 	"os/exec"
@@ -34,7 +33,6 @@ func currentLayout(ws *i3.Node) string {
 }
 
 func updateOpacity(layout string) {
-	fmt.Printf("update opacity: %s\n", layout)
 	if layout == "tabbed" || layout == "stacked" {
 		exec.Command("sway", "[tiling] opacity 1;").CombinedOutput()
 	} else {
@@ -58,13 +56,9 @@ func main() {
 		os.Exit(0)
 	}()
 	recv := i3.Subscribe(i3.WindowEventType, i3.BindingEventType)
-	t, _ := i3.GetTree()
-	// bug in sway which makes it segfault if there are no windows
-	if len(t.Root.Nodes) > 1 {
-		ws := currentWorkspace()
-		resetOpacity()
-		updateOpacity(currentLayout(ws))
-	}
+	ws := currentWorkspace()
+	resetOpacity()
+	updateOpacity(currentLayout(ws))
 	for recv.Next() {
 		event := recv.Event()
 		if ev, ok := event.(*i3.WindowEvent); ok {
