@@ -11,25 +11,12 @@ import (
 	i3 "github.com/johnae/go-i3"
 )
 
-func currentWorkspace() *i3.Node {
+func focusedLayout() string {
 	t, _ := i3.GetTree()
-	focusedWs := t.Root.FindFocused(func(node *i3.Node) bool {
-		if node.Type == i3.WorkspaceNode {
-			n := node.FindFocused(func(node *i3.Node) bool {
-				return node.Focused
-			})
-			return n != nil
-		}
-		return false
+	nodeWithLayout := t.Root.FindFocused(func(node *i3.Node) bool {
+		return node.Layout != "none"
 	})
-	return focusedWs
-}
-
-func currentLayout(ws *i3.Node) string {
-	if ws != nil {
-		return string(ws.Layout)
-	}
-	return ""
+	return string(nodeWithLayout.Layout)
 }
 
 func updateOpacity(layout string) {
@@ -56,21 +43,18 @@ func main() {
 		os.Exit(0)
 	}()
 	recv := i3.Subscribe(i3.WindowEventType, i3.BindingEventType)
-	ws := currentWorkspace()
 	resetOpacity()
-	updateOpacity(currentLayout(ws))
+	updateOpacity(focusedLayout())
 	for recv.Next() {
 		event := recv.Event()
 		if ev, ok := event.(*i3.WindowEvent); ok {
 			if ev.Change == "focus" {
-				ws := currentWorkspace()
-				updateOpacity(currentLayout(ws))
+				updateOpacity(focusedLayout())
 			}
 		} else if ev, ok := event.(*i3.BindingEvent); ok {
 			cmd := strings.Split(ev.Binding.Command, " ")[0]
 			if cmd == "layout" {
-				ws := currentWorkspace()
-				updateOpacity(currentLayout(ws))
+				updateOpacity(focusedLayout())
 			}
 		}
 	}
