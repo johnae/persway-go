@@ -13,6 +13,17 @@ import (
 
 func focusedLayout() string {
 	t, _ := i3.GetTree()
+	floating := t.Root.FindFocused(func(node *i3.Node) bool {
+		return len(node.FloatingNodes) > 0
+	})
+	if floating != nil {
+		fzfwin := floating.FindChild(func(node *i3.Node) bool {
+			return node.Name == "fzf-window"
+		})
+		if fzfwin != nil {
+			return "launcher"
+		}
+	}
 	nodeWithLayout := t.Root.FindFocused(func(node *i3.Node) bool {
 		return node.Layout != "none"
 	})
@@ -20,8 +31,8 @@ func focusedLayout() string {
 }
 
 func updateOpacity(layout string) {
-	if layout == "tabbed" || layout == "stacked" {
-		exec.Command("sway", "[tiling] opacity 1;").CombinedOutput()
+	if layout == "tabbed" || layout == "stacked" || layout == "launcher" {
+		resetOpacity()
 	} else {
 		exec.Command("sway", "[tiling] opacity 0.78; opacity 1").CombinedOutput()
 	}
